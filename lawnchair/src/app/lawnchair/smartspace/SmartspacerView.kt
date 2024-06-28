@@ -9,7 +9,7 @@ import android.view.View
 import app.lawnchair.LawnchairLauncher
 import app.lawnchair.launcher
 import app.lawnchair.ui.preferences.PreferenceActivity
-import app.lawnchair.ui.preferences.Routes
+import app.lawnchair.ui.preferences.navigation.Routes
 import com.android.launcher3.R
 import com.android.launcher3.logging.StatsLogManager
 import com.android.launcher3.views.OptionsPopupView
@@ -109,7 +109,7 @@ class SmartspacerView(context: Context, attrs: AttributeSet?) : BcSmartspaceView
         if (settingsIntent == null) return null
         return OptionsPopupView.OptionItem(
             context,
-            R.string.customize_button_text,
+            R.string.action_customize,
             R.drawable.ic_setting,
             StatsLogManager.LauncherEvent.IGNORE,
         ) {
@@ -120,11 +120,11 @@ class SmartspacerView(context: Context, attrs: AttributeSet?) : BcSmartspaceView
 
     private fun getCustomizeOptionFallback() = OptionsPopupView.OptionItem(
         context,
-        R.string.customize_button_text,
+        R.string.action_customize,
         R.drawable.ic_setting,
         StatsLogManager.LauncherEvent.IGNORE,
     ) {
-        context.startActivity(PreferenceActivity.createIntent(context, "/${Routes.SMARTSPACE}/"))
+        context.startActivity(PreferenceActivity.createIntent(context, Routes.SMARTSPACE))
         true
     }
 }

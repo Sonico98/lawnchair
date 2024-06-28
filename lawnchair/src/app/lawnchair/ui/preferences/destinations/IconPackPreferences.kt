@@ -39,7 +39,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
@@ -51,7 +50,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavGraphBuilder
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lawnchair.preferences.PreferenceAdapter
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences.preferenceManager
@@ -66,7 +65,6 @@ import app.lawnchair.ui.preferences.components.layout.ExpandAndShrink
 import app.lawnchair.ui.preferences.components.layout.NestedScrollStretch
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
-import app.lawnchair.ui.preferences.preferenceGraph
 import app.lawnchair.util.Constants
 import app.lawnchair.util.getThemedIconPacksInstalled
 import app.lawnchair.util.isPackageInstalled
@@ -103,12 +101,10 @@ enum class ThemedIconsState(
     }
 }
 
-fun NavGraphBuilder.iconPackGraph(route: String) {
-    preferenceGraph(route, { IconPackPreferences() })
-}
-
 @Composable
-fun IconPackPreferences() {
+fun IconPackPreferences(
+    modifier: Modifier = Modifier,
+) {
     val prefs = preferenceManager()
     val iconPackAdapter = prefs.iconPackPackage.getAdapter()
     val themedIconPackAdapter = prefs.themedIconPackPackage.getAdapter()
@@ -119,7 +115,9 @@ fun IconPackPreferences() {
     val drawerThemedIconsEnabled = drawerThemedIconsAdapter.state.value
 
     PreferenceLayout(
-        label = stringResource(id = R.string.icon_style),
+        label = stringResource(id = R.string.icon_style_label),
+        modifier = modifier,
+        isExpandedScreen = true,
         scrollState = if (isPortrait) null else scrollState,
     ) {
         if (isPortrait) {
@@ -224,9 +222,10 @@ fun IconPackGrid(
     adapter: PreferenceAdapter<String>,
     drawerThemedIcons: Boolean,
     isThemedIconPack: Boolean,
+    modifier: Modifier = Modifier,
 ) {
-    val iconPacks by LocalPreferenceInteractor.current.iconPacks.collectAsState()
-    val themedIconPacks by LocalPreferenceInteractor.current.themedIconPacks.collectAsState()
+    val iconPacks by LocalPreferenceInteractor.current.iconPacks.collectAsStateWithLifecycle()
+    val themedIconPacks by LocalPreferenceInteractor.current.themedIconPacks.collectAsStateWithLifecycle()
     val lazyListState = rememberLazyListState()
     val padding = 12.dp
     var iconPacksLocal = iconPacks
@@ -250,7 +249,7 @@ fun IconPackGrid(
         }
     }
 
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         val iconPackItemWidth = getIconPackItemWidth(
             availableWidth = this.maxWidth.value - padding.value,
             minimumWidth = 80f,

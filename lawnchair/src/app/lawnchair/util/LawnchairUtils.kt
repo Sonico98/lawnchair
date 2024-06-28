@@ -34,14 +34,12 @@ import android.os.Looper
 import android.provider.OpenableColumns
 import android.util.Size
 import android.view.View
-import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.graphics.ColorUtils
 import androidx.core.os.UserManagerCompat
-import androidx.core.view.children
 import app.lawnchair.preferences.PreferenceManager
 import app.lawnchair.preferences2.PreferenceManager2
-import app.lawnchair.theme.color.ColorTokens
+import app.lawnchair.theme.color.tokens.ColorTokens
 import com.android.launcher3.R
 import com.android.launcher3.Utilities
 import com.android.launcher3.util.Executors.MAIN_EXECUTOR
@@ -152,15 +150,6 @@ fun <T> JSONArray.toArrayList(): ArrayList<T> {
 val kotlinxJson = Json {
     ignoreUnknownKeys = true
 }
-
-val ViewGroup.recursiveChildren: Sequence<View>
-    get() = children.flatMap {
-        if (it is ViewGroup) {
-            it.recursiveChildren + sequenceOf(it)
-        } else {
-            sequenceOf(it)
-        }
-    }
 
 @SuppressLint("DiscouragedApi")
 private val pendingIntentTagId =

@@ -11,7 +11,7 @@ import android.widget.FrameLayout
 import app.lawnchair.LawnchairLauncher
 import app.lawnchair.launcher
 import app.lawnchair.ui.preferences.PreferenceActivity
-import app.lawnchair.ui.preferences.Routes
+import app.lawnchair.ui.preferences.navigation.Routes
 import com.android.launcher3.CheckLongPressHelper
 import com.android.launcher3.R
 import com.android.launcher3.logging.StatsLogManager
@@ -48,11 +48,11 @@ class SmartspaceViewContainer @JvmOverloads constructor(
 
     private fun getCustomizeOption() = OptionsPopupView.OptionItem(
         context,
-        R.string.customize_button_text,
+        R.string.action_customize,
         R.drawable.ic_setting,
         StatsLogManager.LauncherEvent.IGNORE,
     ) {
-        context.startActivity(PreferenceActivity.createIntent(context, "/${Routes.SMARTSPACE}/"))
+        context.startActivity(PreferenceActivity.createIntent(context, Routes.SMARTSPACE))
         true
     }
 

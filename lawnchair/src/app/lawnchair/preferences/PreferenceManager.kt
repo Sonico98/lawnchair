@@ -79,10 +79,11 @@ class PreferenceManager private constructor(private val context: Context) : Base
     val searchResultPeople = BoolPref("pref_searchResultPeople", false, recreate)
     val searchResultPixelTips = BoolPref("pref_searchResultPixelTips", false)
     val searchResultSettings = BoolPref("pref_searchResultSettings", false)
+    val searchResultCalculator = BoolPref("pref_searchResultCalculator", false)
 
+    val searchResultApps = BoolPref("pref_searchResultApps", true, recreate)
     val searchResultFiles = BoolPref("pref_searchResultFiles", false, recreate)
     val searchResultStartPageSuggestion = BoolPref("pref_searchResultStartPageSuggestion", true, recreate)
-    val performWideSearchExperimental = BoolPref("pref_searchWideExperimental", false, recreate)
     val searchResultSettingsEntry = BoolPref("pref_searchResultSettingsEntry", false, recreate)
     val searchResulRecentSuggestion = BoolPref("pref_searchResultRecentSuggestion", false, recreate)
 
@@ -98,6 +99,7 @@ class PreferenceManager private constructor(private val context: Context) : Base
     val recentsActionClearAll = BoolPref("pref_clearAllAsAction", false)
     val recentsActionLocked = BoolPref("pref_lockedAsAction", false)
     val recentsTranslucentBackground = BoolPref("pref_recentsTranslucentBackground", false, recreate)
+    val recentsTranslucentBackgroundAlpha = FloatPref("pref_recentTranslucentBackgroundAlpha", .8f, recreate)
 
     init {
         sp.registerOnSharedPreferenceChangeListener(this)

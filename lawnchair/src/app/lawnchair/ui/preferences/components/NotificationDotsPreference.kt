@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.ContentAlpha
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,7 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.lifecycle.Lifecycle
-import app.lawnchair.ui.AlertBottomSheetContent
+import app.lawnchair.ui.ModalBottomSheetContent
 import app.lawnchair.ui.preferences.components.layout.PreferenceTemplate
 import app.lawnchair.ui.util.bottomSheetHandler
 import app.lawnchair.util.lifecycleState
@@ -60,12 +59,13 @@ import kotlinx.coroutines.flow.callbackFlow
 fun NotificationDotsPreference(
     enabled: Boolean,
     serviceEnabled: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     val bottomSheetHandler = bottomSheetHandler
     val context = LocalContext.current
     val showWarning = enabled && !serviceEnabled
     val summary = when {
-        showWarning -> R.string.missing_notification_access_description
+        showWarning -> R.string.missing_notification_access_label
         enabled -> R.string.notification_dots_desc_on
         else -> R.string.notification_dots_desc_off
     }
@@ -81,13 +81,13 @@ fun NotificationDotsPreference(
                         .size(24.dp),
                     painter = painterResource(id = R.drawable.ic_warning),
                     contentDescription = "",
-                    tint = MaterialTheme.colorScheme.onBackground.copy(alpha = ContentAlpha.medium),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         } else {
             null
         },
-        modifier = Modifier
+        modifier = modifier
             .clickable {
                 if (showWarning) {
                     bottomSheetHandler.show {
@@ -107,15 +107,17 @@ fun NotificationDotsPreference(
 
 @Composable
 fun NotificationAccessConfirmation(
+    modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit,
 ) {
     val context = LocalContext.current
 
-    AlertBottomSheetContent(
+    ModalBottomSheetContent(
+        modifier = modifier,
         title = { Text(text = stringResource(id = R.string.missing_notification_access_label)) },
         text = {
             val appName = stringResource(id = R.string.derived_app_name)
-            Text(text = stringResource(id = R.string.msg_missing_notification_access, appName))
+            Text(text = stringResource(id = R.string.missing_notification_access_desc, appName))
         },
         buttons = {
             OutlinedButton(

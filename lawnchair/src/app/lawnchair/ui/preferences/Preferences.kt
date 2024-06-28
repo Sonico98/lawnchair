@@ -16,63 +16,36 @@
 
 package app.lawnchair.ui.preferences
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import app.lawnchair.backup.ui.createBackupGraph
-import app.lawnchair.backup.ui.restoreBackupGraph
-import app.lawnchair.ui.preferences.about.aboutGraph
-import app.lawnchair.ui.preferences.components.colorpreference.colorSelectionGraph
 import app.lawnchair.ui.preferences.destinations.PreferencesDashboard
-import app.lawnchair.ui.preferences.destinations.appDrawerGraph
-import app.lawnchair.ui.preferences.destinations.debugMenuGraph
-import app.lawnchair.ui.preferences.destinations.dockGraph
-import app.lawnchair.ui.preferences.destinations.experimentalFeaturesGraph
-import app.lawnchair.ui.preferences.destinations.folderGraph
-import app.lawnchair.ui.preferences.destinations.fontSelectionGraph
-import app.lawnchair.ui.preferences.destinations.generalGraph
-import app.lawnchair.ui.preferences.destinations.gesturesGraph
-import app.lawnchair.ui.preferences.destinations.homeScreenGraph
-import app.lawnchair.ui.preferences.destinations.iconPickerGraph
-import app.lawnchair.ui.preferences.destinations.pickAppForGestureGraph
-import app.lawnchair.ui.preferences.destinations.quickstepGraph
-import app.lawnchair.ui.preferences.destinations.selectIconGraph
-import app.lawnchair.ui.preferences.destinations.smartspaceGraph
-import app.lawnchair.ui.preferences.destinations.smartspaceWidgetGraph
+import app.lawnchair.ui.preferences.navigation.InnerNavigation
+import app.lawnchair.ui.preferences.navigation.PreferencePane
+import app.lawnchair.ui.preferences.navigation.Routes
 import app.lawnchair.ui.util.ProvideBottomSheetHandler
 import app.lawnchair.util.ProvideLifecycleState
-import soup.compose.material.motion.animation.materialSharedAxisXIn
-import soup.compose.material.motion.animation.materialSharedAxisXOut
+import com.google.accompanist.adaptive.HorizontalTwoPaneStrategy
+import com.google.accompanist.adaptive.TwoPane
 import soup.compose.material.motion.animation.rememberSlideDistance
-
-object Routes {
-    const val GENERAL = "general"
-    const val ABOUT = "about"
-    const val HOME_SCREEN = "homeScreen"
-    const val DOCK = "dock"
-    const val APP_DRAWER = "appDrawer"
-    const val FOLDERS = "folders"
-    const val QUICKSTEP = "quickstep"
-    const val FONT_SELECTION = "fontSelection"
-    const val COLOR_SELECTION = "colorSelection"
-    const val DEBUG_MENU = "debugMenu"
-    const val SELECT_ICON = "selectIcon"
-    const val ICON_PICKER = "iconPicker"
-    const val EXPERIMENTAL_FEATURES = "experimentalFeatures"
-    const val SMARTSPACE = "smartspace"
-    const val SMARTSPACE_WIDGET = "smartspaceWidget"
-    const val CREATE_BACKUP = "createBackup"
-    const val RESTORE_BACKUP = "restoreBackup"
-    const val PICK_APP_FOR_GESTURE = "pickAppForGesture"
-    const val GESTURES = "gestures"
-}
 
 val LocalNavController = staticCompositionLocalOf<NavController> {
     error("CompositionLocal LocalNavController not present")
@@ -82,51 +55,113 @@ val LocalPreferenceInteractor = staticCompositionLocalOf<PreferenceInteractor> {
     error("CompositionLocal LocalPreferenceInteractor not present")
 }
 
+val LocalIsExpandedScreen = compositionLocalOf { false }
+
+val twoPaneBlacklist = listOf(
+    Routes.ICON_PICKER,
+    Routes.SELECT_ICON,
+)
+
 @Composable
 fun Preferences(
+    windowSizeClass: WindowSizeClass,
+    modifier: Modifier = Modifier,
     interactor: PreferenceInteractor = viewModel<PreferenceViewModel>(),
 ) {
     val navController = rememberNavController()
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val slideDistance = rememberSlideDistance()
+    val isExpandedScreen = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+
+    val currentDestination =
+        navController.currentBackStackEntryAsState()
+    // get parent and normal route
+    val currentRoute =
+        "${currentDestination.value?.destination?.parent?.route}/${currentDestination.value?.destination?.route}"
+
+    val blacklistedRoute = twoPaneBlacklist.any { currentRoute.contains(it) }
+
+    val useTwoPane = !blacklistedRoute && isExpandedScreen
 
     Providers {
-        Surface {
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+            modifier = modifier,
+        ) {
             CompositionLocalProvider(
                 LocalNavController provides navController,
                 LocalPreferenceInteractor provides interactor,
+                LocalIsExpandedScreen provides isExpandedScreen,
             ) {
-                NavHost(
+                PreferenceScreen(
+                    currentRoute = currentRoute,
+                    useTwoPane = useTwoPane,
+                    isExpandedScreen = isExpandedScreen,
                     navController = navController,
-                    startDestination = "/",
-                    enterTransition = { materialSharedAxisXIn(!isRtl, slideDistance) },
-                    exitTransition = { materialSharedAxisXOut(!isRtl, slideDistance) },
-                    popEnterTransition = { materialSharedAxisXIn(isRtl, slideDistance) },
-                    popExitTransition = { materialSharedAxisXOut(isRtl, slideDistance) },
                 ) {
-                    preferenceGraph(route = "/", { PreferencesDashboard() }) { subRoute ->
-                        generalGraph(route = subRoute(Routes.GENERAL))
-                        homeScreenGraph(route = subRoute(Routes.HOME_SCREEN))
-                        dockGraph(route = subRoute(Routes.DOCK))
-                        appDrawerGraph(route = subRoute(Routes.APP_DRAWER))
-                        folderGraph(route = subRoute(Routes.FOLDERS))
-                        quickstepGraph(route = subRoute(Routes.QUICKSTEP))
-                        aboutGraph(route = subRoute(Routes.ABOUT))
-                        fontSelectionGraph(route = subRoute(Routes.FONT_SELECTION))
-                        colorSelectionGraph(route = subRoute(Routes.COLOR_SELECTION))
-                        debugMenuGraph(route = subRoute(Routes.DEBUG_MENU))
-                        selectIconGraph(route = subRoute(Routes.SELECT_ICON))
-                        iconPickerGraph(route = subRoute(Routes.ICON_PICKER))
-                        experimentalFeaturesGraph(route = subRoute(Routes.EXPERIMENTAL_FEATURES))
-                        smartspaceGraph(route = subRoute(Routes.SMARTSPACE))
-                        smartspaceWidgetGraph(route = subRoute(Routes.SMARTSPACE_WIDGET))
-                        createBackupGraph(route = subRoute(Routes.CREATE_BACKUP))
-                        restoreBackupGraph(route = subRoute(Routes.RESTORE_BACKUP))
-                        pickAppForGestureGraph(route = subRoute(Routes.PICK_APP_FOR_GESTURE))
-                        gesturesGraph(route = subRoute(Routes.GESTURES))
-                    }
+                    InnerNavigation(
+                        navController = navController,
+                        isRtl = isRtl,
+                        slideDistance = slideDistance,
+                        isExpandedScreen = isExpandedScreen,
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun PreferenceScreen(
+    currentRoute: String,
+    useTwoPane: Boolean,
+    isExpandedScreen: Boolean,
+    navController: NavHostController,
+    navHost: @Composable () -> Unit,
+) {
+    when {
+        // Assume that twopane means we are in an expanded screen
+        useTwoPane -> {
+            TwoPane(
+                first = {
+                    PreferencePane {
+                        PreferencesDashboard(
+                            currentRoute = currentRoute,
+                            onNavigate = {
+                                navController.navigate(it) {
+                                    launchSingleTop = true
+                                    popUpTo(navController.graph.id)
+                                }
+                            },
+                        )
+                    }
+                },
+                second = {
+                    PreferencePane {
+                        navHost()
+                    }
+                },
+                strategy = HorizontalTwoPaneStrategy(splitOffset = 420.dp),
+                displayFeatures = listOf(),
+                modifier = Modifier.safeContentPadding(),
+            )
+        }
+        isExpandedScreen -> {
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .safeContentPadding(),
+            ) {
+                PreferencePane(
+                    modifier = Modifier.requiredWidth(640.dp),
+                ) {
+                    navHost()
+                }
+            }
+        }
+        else -> {
+            navHost()
         }
     }
 }

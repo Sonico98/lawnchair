@@ -18,8 +18,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Velocity
 import app.lawnchair.ui.StretchEdgeEffect
 
+/**
+ * Creates a custom overscroll effect based off the Android 12 "stretch" animation.
+ * @param content The content to animate.
+ *
+ * TODO: Allow horizontal stretch
+ */
 @Composable
 fun NestedScrollStretch(
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
     val invalidateTick = remember { mutableIntStateOf(0) }
@@ -31,7 +38,7 @@ fun NestedScrollStretch(
     val tmpOut = remember { FloatArray(5) }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .nestedScroll(connection)
             .onSizeChanged {
                 connection.height = it.height
@@ -86,7 +93,7 @@ private class NestedScrollStretchConnection(context: Context, invalidate: Runnab
     override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
         val availableY = available.y
         when {
-            source != NestedScrollSource.Drag || height == 0 -> return Offset.Zero
+            source != NestedScrollSource.UserInput || height == 0 -> return Offset.Zero
             availableY != 0f -> {
                 if (availableY < 0f) {
                     val consumed = topEdgeEffect.onPullDistance(availableY / height, 0f)
@@ -110,7 +117,7 @@ private class NestedScrollStretchConnection(context: Context, invalidate: Runnab
     ): Offset {
         val availableY = available.y
         when {
-            source != NestedScrollSource.Drag || height == 0 -> return Offset.Zero
+            source != NestedScrollSource.UserInput || height == 0 -> return Offset.Zero
             availableY != 0f -> {
                 if (availableY > 0f) {
                     topEdgeEffect.onPull(availableY / height)

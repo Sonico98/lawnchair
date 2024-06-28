@@ -166,7 +166,7 @@ import java.util.List;
 import app.lawnchair.LawnchairApp;
 import app.lawnchair.compat.LawnchairQuickstepCompat;
 import app.lawnchair.icons.shape.IconShapeManager;
-import app.lawnchair.theme.color.ColorTokens;
+import app.lawnchair.theme.color.tokens.ColorTokens;
 
 /**
  * Manages the opening and closing app transitions from Launcher
@@ -1150,14 +1150,11 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
      * Registers remote animations used when closing apps to home screen.
      */
     public void registerRemoteTransitions() {
-        if (ENABLE_SHELL_TRANSITIONS && LawnchairQuickstepCompat.ATLEAST_U) {
+        if (SEPARATE_RECENTS_ACTIVITY.get() || !Utilities.ATLEAST_T) return;
+
+        if (ENABLE_SHELL_TRANSITIONS && LawnchairQuickstepCompat.ATLEAST_U)
             SystemUiProxy.INSTANCE.get(mLauncher).shareTransactionQueue();
-        }
-        if (SEPARATE_RECENTS_ACTIVITY.get()) {
-            return;
-        }
-        if (!LawnchairQuickstepCompat.ATLEAST_T) return;
-        if (hasControlRemoteAppTransitionPermission()) {
+        if (hasControlRemoteAppTransitionPermission() && LawnchairQuickstepCompat.ATLEAST_Q) {
             mWallpaperOpenTransitionRunner = createWallpaperOpenRunner(false /* fromUnlock */);
             mLauncherOpenTransition = LawnchairQuickstepCompat.getRemoteTransitionCompat().getRemoteTransition(
                     new LauncherAnimationRunner(mHandler, mWallpaperOpenTransitionRunner,

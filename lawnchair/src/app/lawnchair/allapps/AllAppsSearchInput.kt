@@ -26,7 +26,7 @@ import app.lawnchair.launcher
 import app.lawnchair.preferences.PreferenceManager
 import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.search.LawnchairRecentSuggestionProvider
-import app.lawnchair.search.LawnchairSearchAlgorithm
+import app.lawnchair.search.algorithms.LawnchairSearchAlgorithm
 import app.lawnchair.theme.drawable.DrawableTokens
 import com.android.launcher3.Insettable
 import com.android.launcher3.LauncherState
@@ -54,6 +54,7 @@ class AllAppsSearchInput(context: Context, attrs: AttributeSet?) :
     private lateinit var hint: TextView
     private lateinit var input: FallbackSearchInputView
     private lateinit var actionButton: ImageButton
+    private lateinit var searchIcon: ImageButton
 
     private val qsbMarginTopAdjusting = resources.getDimensionPixelSize(R.dimen.qsb_margin_top_adjusting)
     private val allAppsSearchVerticalOffset = resources.getDimensionPixelSize(R.dimen.all_apps_search_vertical_offset)
@@ -75,7 +76,8 @@ class AllAppsSearchInput(context: Context, attrs: AttributeSet?) :
     private var bgVisible = true
     private var bgAlpha = 1f
     private val suggestionsRecent = SearchRecentSuggestions(launcher, LawnchairRecentSuggestionProvider.AUTHORITY, LawnchairRecentSuggestionProvider.MODE)
-    private val pref = PreferenceManager.getInstance(launcher)
+    private val prefs = PreferenceManager.getInstance(launcher)
+    private val prefs2 = PreferenceManager2.getInstance(launcher)
 
     override fun onFinishInflate() {
         super.onFinishInflate()
@@ -88,7 +90,7 @@ class AllAppsSearchInput(context: Context, attrs: AttributeSet?) :
 
         input = ViewCompat.requireViewById(this, R.id.input)
         with(input) {
-            if (pref.performWideSearchExperimental.get()) {
+            if (prefs2.searchAlgorithm.firstBlocking() != LawnchairSearchAlgorithm.APP_SEARCH) {
                 setHint(R.string.all_apps_device_search_hint)
             } else {
                 setHint(R.string.all_apps_search_bar_hint)
@@ -106,7 +108,13 @@ class AllAppsSearchInput(context: Context, attrs: AttributeSet?) :
             }
         }
 
-        if (pref.searchResulRecentSuggestion.get()) {
+        searchIcon = ViewCompat.requireViewById(this, R.id.search_icon)
+        with(searchIcon) {
+            isVisible = true
+            // todo implement search feature
+        }
+
+        if (prefs.searchResulRecentSuggestion.get()) {
             input.onFocusChangeListener = OnFocusChangeListener { _, hasFocus ->
                 if (!hasFocus) {
                     val query = editText.text.toString()
@@ -125,13 +133,6 @@ class AllAppsSearchInput(context: Context, attrs: AttributeSet?) :
                     val enableDebugMenu = PreferenceManager.getInstance(context).enableDebugMenu
                     enableDebugMenu.set(!enableDebugMenu.get())
                     launcher.stateManager.goToState(LauncherState.NORMAL)
-                }
-                // Make sure to empty
-                // if user used backspace instead of clear action btn
-                if (input.text.isEmpty() || input.text.isBlank()) {
-                    input.reset()
-                    resetSearch()
-                    clearSearchResult()
                 }
             },
         )

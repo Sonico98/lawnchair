@@ -34,11 +34,14 @@ import app.lawnchair.icons.shape.IconShape
 import app.lawnchair.icons.shape.IconShapeManager
 import app.lawnchair.preferences.PreferenceManager as LawnchairPreferenceManager
 import app.lawnchair.qsb.providers.QsbSearchProvider
+import app.lawnchair.search.algorithms.LawnchairSearchAlgorithm
 import app.lawnchair.smartspace.model.SmartspaceCalendar
 import app.lawnchair.smartspace.model.SmartspaceMode
 import app.lawnchair.smartspace.model.SmartspaceTimeFormat
 import app.lawnchair.theme.color.ColorMode
 import app.lawnchair.theme.color.ColorOption
+import app.lawnchair.theme.color.ColorStyle
+import app.lawnchair.ui.preferences.components.HiddenAppsInSearch
 import app.lawnchair.util.kotlinxJson
 import com.android.launcher3.InvariantDeviceProfile
 import com.android.launcher3.LauncherAppState
@@ -106,6 +109,14 @@ class PreferenceManager2 private constructor(private val context: Context) : Pre
     val alwaysReloadIcons = preference(
         key = booleanPreferencesKey(name = "always_reload_icons"),
         defaultValue = context.resources.getBoolean(R.bool.config_default_always_reload_icons),
+    )
+
+    val colorStyle = preference(
+        key = stringPreferencesKey("color_style"),
+        defaultValue = ColorStyle.fromString("tonal_spot"),
+        parse = { ColorStyle.fromString(it) },
+        save = { it.toString() },
+        onSet = { reloadHelper.restart() },
     )
 
     val notificationDotColor = preference(
@@ -191,6 +202,16 @@ class PreferenceManager2 private constructor(private val context: Context) : Pre
         onSet = { reloadHelper.reloadGrid() },
     )
 
+    val forceWidgetResize = preference(
+        key = booleanPreferencesKey(name = "force_widget_resize"),
+        defaultValue = context.resources.getBoolean(R.bool.config_default_force_widget_resize),
+    )
+
+    val widgetUnlimitedSize = preference(
+        key = booleanPreferencesKey(name = "widget_unlimited_size"),
+        defaultValue = context.resources.getBoolean(R.bool.config_default_widget_unlimited_size),
+    )
+
     val showStatusBar = preference(
         key = booleanPreferencesKey(name = "show_status_bar"),
         defaultValue = context.resources.getBoolean(R.bool.config_default_show_status_bar),
@@ -244,13 +265,23 @@ class PreferenceManager2 private constructor(private val context: Context) : Pre
 
     val showHiddenAppsInSearch = preference(
         key = booleanPreferencesKey(name = "show_hidden_apps_in_search"),
-        defaultValue = context.resources.getBoolean(R.bool.config_default_show_hidden_apps_in_search),
-        onSet = { reloadHelper.reloadGrid() },
+        defaultValue = false,
     )
 
     val enableSmartHide = preference(
         key = booleanPreferencesKey(name = "enable_smart_hide"),
-        defaultValue = context.resources.getBoolean(R.bool.config_default_enable_smart_hide),
+        defaultValue = false,
+    )
+
+    val hiddenAppsInSearch = preference(
+        key = stringPreferencesKey(name = "hidden_apps_in_search"),
+        defaultValue = HiddenAppsInSearch.NEVER,
+        onSet = { reloadHelper.recreate() },
+    )
+
+    val searchAlgorithm = preference(
+        key = stringPreferencesKey(name = "search_algorithm"),
+        defaultValue = LawnchairSearchAlgorithm.APP_SEARCH,
         onSet = { reloadHelper.recreate() },
     )
 
@@ -279,11 +310,6 @@ class PreferenceManager2 private constructor(private val context: Context) : Pre
     val autoShowKeyboardInDrawer = preference(
         key = booleanPreferencesKey(name = "auto_show_keyboard_in_drawer"),
         defaultValue = context.resources.getBoolean(R.bool.config_default_auto_show_keyboard_in_drawer),
-    )
-
-    val performWideSearch = preference(
-        key = booleanPreferencesKey(name = "performWideSearch"),
-        defaultValue = context.resources.getBoolean(R.bool.config_default_perform_wide_search),
     )
 
     val workspaceTextColor = preference(
@@ -371,12 +397,12 @@ class PreferenceManager2 private constructor(private val context: Context) : Pre
         defaultValue = context.resources.getBoolean(R.bool.config_default_enable_fuzzy_search),
     )
 
-    val maxSearchResultCount = preference(
+    val maxAppSearchResultCount = preference(
         key = intPreferencesKey(name = "max_search_result_count"),
         defaultValue = resourceProvider.getInt(R.dimen.config_default_search_max_result_count),
     )
 
-    val maxSuggestionResultCount = preference(
+    val maxWebSuggestionResultCount = preference(
         key = intPreferencesKey(name = "max_suggestion_result_count"),
         defaultValue = resourceProvider.getInt(R.dimen.config_default_suggestion_max_result_count),
     )
@@ -421,6 +447,12 @@ class PreferenceManager2 private constructor(private val context: Context) : Pre
     val enableMaterialUPopUp = preference(
         key = booleanPreferencesKey(name = "enable_material_u_popup"),
         defaultValue = context.resources.getBoolean(R.bool.config_default_enable_material_u_popup),
+        onSet = { reloadHelper.recreate() },
+    )
+
+    val twoLineAllApps = preference(
+        key = booleanPreferencesKey(name = "two_line_all_apps"),
+        defaultValue = context.resources.getBoolean(R.bool.config_default_enable_two_line_allapps),
         onSet = { reloadHelper.recreate() },
     )
 

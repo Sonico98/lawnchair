@@ -3,46 +3,44 @@ package app.lawnchair.ui.preferences.destinations
 import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.datastore.preferences.core.Preferences
-import androidx.navigation.NavGraphBuilder
 import app.lawnchair.preferences.PreferenceManager
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.preferenceManager2
-import app.lawnchair.ui.preferences.components.FontPreference
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
 import app.lawnchair.ui.preferences.components.controls.MainSwitchPreference
 import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.controls.TextPreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
-import app.lawnchair.ui.preferences.preferenceGraph
 import com.android.launcher3.settings.SettingsActivity
 import com.android.launcher3.uioverrides.flags.DeveloperOptionsFragment
 import com.patrykmichalik.opto.domain.Preference
-
-fun NavGraphBuilder.debugMenuGraph(route: String) {
-    preferenceGraph(route, { DebugMenuPreferences() })
-}
 
 /**
  * A screen to house unfinished preferences and debug flags
  */
 @Composable
-fun DebugMenuPreferences() {
+fun DebugMenuPreferences(
+    modifier: Modifier = Modifier,
+) {
     val prefs = preferenceManager()
     val prefs2 = preferenceManager2()
     val flags = remember { prefs.debugFlags }
     val flags2 = remember { prefs2.debugFlags }
     val textFlags = remember { prefs2.textFlags }
-    val fontFlags = remember { prefs.fontFlags }
     val context = LocalContext.current
 
     val enableDebug = prefs.enableDebugMenu.getAdapter()
 
-    PreferenceLayout(label = "Debug Menu") {
+    PreferenceLayout(
+        label = "Debug Menu",
+        modifier = modifier,
+    ) {
         MainSwitchPreference(adapter = enableDebug, label = "Show Debug Menu") {
             PreferenceGroup {
                 ClickablePreference(
@@ -81,12 +79,6 @@ fun DebugMenuPreferences() {
                         label = it.key.name,
                     )
                 }
-                fontFlags.forEach {
-                    FontPreference(
-                        fontPref = it,
-                        label = it.key,
-                    )
-                }
             }
         }
     }
@@ -106,12 +98,4 @@ private val PreferenceManager.debugFlags
         searchResultPixelTips,
         searchResultSettings,
         ignoreFeedWhitelist,
-    )
-
-private val PreferenceManager.fontFlags
-    get() = listOf(
-        fontHeading,
-        fontHeadingMedium,
-        fontBody,
-        fontBodyMedium,
     )

@@ -8,24 +8,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.navigation.NavGraphBuilder
 import app.lawnchair.gestures.config.GestureHandlerConfig
 import app.lawnchair.gestures.handlers.OpenAppTarget
+import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.AppItem
 import app.lawnchair.ui.preferences.components.AppItemPlaceholder
 import app.lawnchair.ui.preferences.components.layout.PreferenceLazyColumn
 import app.lawnchair.ui.preferences.components.layout.PreferenceScaffold
 import app.lawnchair.ui.preferences.components.layout.preferenceGroupItems
-import app.lawnchair.ui.preferences.preferenceGraph
 import app.lawnchair.util.App
 import app.lawnchair.util.appsState
 import app.lawnchair.util.kotlinxJson
 import com.android.launcher3.R
 import kotlinx.serialization.encodeToString
-
-fun NavGraphBuilder.pickAppForGestureGraph(route: String) {
-    preferenceGraph(route, { PickAppForGesture() })
-}
 
 @Composable
 fun PickAppForGesture() {
@@ -45,10 +40,11 @@ fun PickAppForGesture() {
 
     PreferenceScaffold(
         label = stringResource(id = R.string.pick_app_for_gesture),
+        isExpandedScreen = LocalIsExpandedScreen.current,
     ) {
         Crossfade(targetState = apps.isNotEmpty(), label = "") { present ->
             if (present) {
-                PreferenceLazyColumn(state = state) {
+                PreferenceLazyColumn(it, state = state) {
                     preferenceGroupItems(
                         items = apps,
                         isFirstChild = true,
@@ -60,7 +56,7 @@ fun PickAppForGesture() {
                     }
                 }
             } else {
-                PreferenceLazyColumn(enabled = false) {
+                PreferenceLazyColumn(it, enabled = false) {
                     preferenceGroupItems(
                         count = 20,
                         isFirstChild = true,

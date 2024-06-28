@@ -12,13 +12,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.TipsAndUpdates
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme as Material3Theme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,82 +34,110 @@ import app.lawnchair.preferences.observeAsState
 import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.ui.OverflowMenu
 import app.lawnchair.ui.preferences.LocalNavController
-import app.lawnchair.ui.preferences.Routes
+import app.lawnchair.ui.preferences.components.AnnouncementPreference
+import app.lawnchair.ui.preferences.components.controls.PreferenceCategory
 import app.lawnchair.ui.preferences.components.controls.WarningPreference
 import app.lawnchair.ui.preferences.components.layout.ClickableIcon
-import app.lawnchair.ui.preferences.components.layout.PreferenceCategory
 import app.lawnchair.ui.preferences.components.layout.PreferenceDivider
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.components.layout.PreferenceTemplate
-import app.lawnchair.ui.preferences.subRoute
+import app.lawnchair.ui.preferences.data.liveinfo.SyncLiveInformation
+import app.lawnchair.ui.preferences.navigation.Routes
 import app.lawnchair.util.isDefaultLauncher
 import app.lawnchair.util.restartLauncher
 import com.android.launcher3.BuildConfig
 import com.android.launcher3.R
 
 @Composable
-fun PreferencesDashboard() {
+fun PreferencesDashboard(
+    currentRoute: String,
+    onNavigate: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
+    SyncLiveInformation()
+
     PreferenceLayout(
         label = stringResource(id = R.string.settings),
+        modifier = modifier,
         verticalArrangement = Arrangement.Top,
         backArrowVisible = false,
         actions = { PreferencesOverflowMenu() },
     ) {
-        if (BuildConfig.DEBUG) PreferencesDebugWarning()
+        AnnouncementPreference()
+
+        if (BuildConfig.DEBUG) {
+            PreferencesDebugWarning()
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         if (!context.isDefaultLauncher()) {
-            Spacer(modifier = Modifier.height(16.dp))
             PreferencesSetDefaultLauncherWarning()
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
         PreferenceCategory(
             label = stringResource(R.string.general_label),
             description = stringResource(R.string.general_description),
             iconResource = R.drawable.ic_general,
-            route = Routes.GENERAL,
+            onNavigate = { onNavigate(Routes.GENERAL) },
+            isSelected = currentRoute.contains(Routes.GENERAL),
         )
 
         PreferenceCategory(
             label = stringResource(R.string.home_screen_label),
             description = stringResource(R.string.home_screen_description),
             iconResource = R.drawable.ic_home_screen,
-            route = Routes.HOME_SCREEN,
+            onNavigate = { onNavigate(Routes.HOME_SCREEN) },
+            isSelected = currentRoute.contains(Routes.HOME_SCREEN),
         )
 
         PreferenceCategory(
             label = stringResource(id = R.string.smartspace_widget),
             description = stringResource(R.string.smartspace_widget_description),
             iconResource = R.drawable.ic_smartspace,
-            route = Routes.SMARTSPACE,
+            onNavigate = { onNavigate(Routes.SMARTSPACE) },
+            isSelected = currentRoute.contains(Routes.SMARTSPACE),
         )
 
         PreferenceCategory(
             label = stringResource(R.string.dock_label),
             description = stringResource(R.string.dock_description),
             iconResource = R.drawable.ic_dock,
-            route = Routes.DOCK,
+            onNavigate = { onNavigate(Routes.DOCK) },
+            isSelected = currentRoute.contains(Routes.DOCK),
         )
 
         PreferenceCategory(
             label = stringResource(R.string.app_drawer_label),
             description = stringResource(R.string.app_drawer_description),
             iconResource = R.drawable.ic_app_drawer,
-            route = Routes.APP_DRAWER,
+            onNavigate = { onNavigate(Routes.APP_DRAWER) },
+            isSelected = currentRoute.contains(Routes.APP_DRAWER),
+        )
+
+        PreferenceCategory(
+            label = stringResource(R.string.drawer_search_label),
+            description = stringResource(R.string.drawer_search_description),
+            iconResource = R.drawable.ic_search,
+            onNavigate = { onNavigate(Routes.SEARCH) },
+            isSelected = currentRoute.contains(Routes.SEARCH),
         )
 
         PreferenceCategory(
             label = stringResource(R.string.folders_label),
             description = stringResource(R.string.folders_description),
             iconResource = R.drawable.ic_folder,
-            route = Routes.FOLDERS,
+            onNavigate = { onNavigate(Routes.FOLDERS) },
+            isSelected = currentRoute.contains(Routes.FOLDERS),
         )
 
         PreferenceCategory(
             label = stringResource(id = R.string.gestures_label),
             description = stringResource(R.string.gestures_description),
             iconResource = R.drawable.ic_gestures,
-            route = Routes.GESTURES,
+            onNavigate = { onNavigate(Routes.GESTURES) },
+            isSelected = currentRoute.contains(Routes.GESTURES),
         )
 
         if (LawnchairApp.isRecentsEnabled || BuildConfig.DEBUG) {
@@ -118,7 +145,8 @@ fun PreferencesDashboard() {
                 label = stringResource(id = R.string.quickstep_label),
                 description = stringResource(id = R.string.quickstep_description),
                 iconResource = R.drawable.ic_quickstep,
-                route = Routes.QUICKSTEP,
+                onNavigate = { onNavigate(Routes.QUICKSTEP) },
+                isSelected = currentRoute.contains(Routes.QUICKSTEP),
             )
         }
 
@@ -126,81 +154,90 @@ fun PreferencesDashboard() {
             label = stringResource(R.string.about_label),
             description = "${context.getString(R.string.derived_app_name)} ${BuildConfig.MAJOR_VERSION}",
             iconResource = R.drawable.ic_about,
-            route = Routes.ABOUT,
+            onNavigate = { onNavigate(Routes.ABOUT) },
+            isSelected = currentRoute.contains(Routes.ABOUT),
         )
     }
 }
 
 @Composable
-fun PreferencesOverflowMenu() {
+fun PreferencesOverflowMenu(
+    modifier: Modifier = Modifier,
+) {
     val navController = LocalNavController.current
     val enableDebug by preferenceManager().enableDebugMenu.observeAsState()
-    val experimentalFeaturesRoute = subRoute(name = Routes.EXPERIMENTAL_FEATURES)
+    val experimentalFeaturesRoute = Routes.EXPERIMENTAL_FEATURES
     if (enableDebug) {
-        val resolvedRoute = subRoute(name = Routes.DEBUG_MENU)
+        val resolvedRoute = Routes.DEBUG_MENU
         ClickableIcon(
             imageVector = Icons.Rounded.Build,
             onClick = { navController.navigate(resolvedRoute) },
         )
     }
     val openRestoreBackup = restoreBackupOpener()
-    OverflowMenu {
+    OverflowMenu(
+        modifier = modifier,
+    ) {
         val context = LocalContext.current
         DropdownMenuItem(onClick = {
             openAppInfo(context)
             hideMenu()
-        }) {
+        }, text = {
             Text(text = stringResource(id = R.string.app_info_drop_target_label))
-        }
+        })
         DropdownMenuItem(onClick = {
             restartLauncher(context)
             hideMenu()
-        }) {
+        }, text = {
             Text(text = stringResource(id = R.string.debug_restart_launcher))
-        }
+        })
         DropdownMenuItem(onClick = {
             navController.navigate(experimentalFeaturesRoute)
             hideMenu()
-        }) {
+        }, text = {
             Text(text = stringResource(id = R.string.experimental_features_label))
-        }
+        })
         PreferenceDivider(modifier = Modifier.padding(vertical = 8.dp))
         DropdownMenuItem(onClick = {
-            navController.navigate("/${Routes.CREATE_BACKUP}/")
+            navController.navigate(Routes.CREATE_BACKUP)
             hideMenu()
-        }) {
+        }, text = {
             Text(text = stringResource(id = R.string.create_backup))
-        }
+        })
         DropdownMenuItem(onClick = {
             openRestoreBackup()
             hideMenu()
-        }) {
+        }, text = {
             Text(text = stringResource(id = R.string.restore_backup))
-        }
+        })
     }
 }
 
 @Composable
-fun PreferencesDebugWarning() {
+fun PreferencesDebugWarning(
+    modifier: Modifier = Modifier,
+) {
     Surface(
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier = modifier.padding(horizontal = 16.dp),
         shape = MaterialTheme.shapes.large,
-        color = Material3Theme.colorScheme.errorContainer,
+        color = MaterialTheme.colorScheme.errorContainer,
     ) {
         WarningPreference(
             // Don't move to strings.xml, no need to translate this warning
-            text = "Warning: You are currently using a development build. These builds WILL contain bugs, broken features, and unexpected crashes. Use at your own risk!",
+            text = "You are using a development build, which may contain bugs and broken features. Use at your own risk!",
         )
     }
 }
 
 @Composable
-fun PreferencesSetDefaultLauncherWarning() {
+fun PreferencesSetDefaultLauncherWarning(
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
     Surface(
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier = modifier.padding(horizontal = 16.dp),
         shape = MaterialTheme.shapes.large,
-        color = Material3Theme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
         PreferenceTemplate(
             modifier = Modifier.clickable {
@@ -213,13 +250,13 @@ fun PreferencesSetDefaultLauncherWarning() {
             description = {
                 Text(
                     text = stringResource(id = R.string.set_default_launcher_tip),
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             },
             startWidget = {
                 Icon(
                     imageVector = Icons.Rounded.TipsAndUpdates,
-                    tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     contentDescription = null,
                 )
             },

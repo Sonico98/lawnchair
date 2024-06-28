@@ -17,50 +17,45 @@
 package app.lawnchair.ui.preferences.destinations
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.navigation.NavGraphBuilder
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.lawnchair.preferences.PreferenceAdapter
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.preferences2.asState
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.theme.color.ColorOption
+import app.lawnchair.theme.color.ColorStyle
+import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.LocalPreferenceInteractor
 import app.lawnchair.ui.preferences.components.FontPreference
-import app.lawnchair.ui.preferences.components.IconShapePreview
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
 import app.lawnchair.ui.preferences.components.NotificationDotsPreference
 import app.lawnchair.ui.preferences.components.ThemePreference
 import app.lawnchair.ui.preferences.components.colorpreference.ColorContrastWarning
 import app.lawnchair.ui.preferences.components.colorpreference.ColorPreference
+import app.lawnchair.ui.preferences.components.controls.ListPreference
+import app.lawnchair.ui.preferences.components.controls.ListPreferenceEntry
 import app.lawnchair.ui.preferences.components.controls.SliderPreference
 import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.controls.WarningPreference
-import app.lawnchair.ui.preferences.components.iconShapeEntries
-import app.lawnchair.ui.preferences.components.iconShapeGraph
 import app.lawnchair.ui.preferences.components.layout.DividerColumn
 import app.lawnchair.ui.preferences.components.layout.ExpandAndShrink
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.components.notificationDotsEnabled
 import app.lawnchair.ui.preferences.components.notificationServiceEnabled
-import app.lawnchair.ui.preferences.preferenceGraph
-import app.lawnchair.ui.preferences.subRoute
 import com.android.launcher3.R
+import com.android.launcher3.Utilities
+import kotlinx.collections.immutable.toPersistentList
 
 object GeneralRoutes {
     const val ICON_PACK = "iconPack"
     const val ICON_SHAPE = "iconShape"
-}
-
-fun NavGraphBuilder.generalGraph(route: String) {
-    preferenceGraph(route, { GeneralPreferences() }) { subRoute ->
-        iconPackGraph(route = subRoute(GeneralRoutes.ICON_PACK))
-        iconShapeGraph(route = subRoute(GeneralRoutes.ICON_SHAPE))
-    }
 }
 
 @Composable
@@ -68,7 +63,7 @@ fun GeneralPreferences() {
     val context = LocalContext.current
     val prefs = preferenceManager()
     val prefs2 = preferenceManager2()
-    val iconPacks by LocalPreferenceInteractor.current.iconPacks.collectAsState()
+    val iconPacks by LocalPreferenceInteractor.current.iconPacks.collectAsStateWithLifecycle()
     val themedIconsAdapter = prefs.themedIcons.getAdapter()
     val drawerThemedIconsAdapter = prefs.drawerThemedIcons.getAdapter()
     val iconShapeAdapter = prefs2.iconShape.getAdapter()
@@ -94,44 +89,63 @@ fun GeneralPreferences() {
         ?.label?.invoke()
         ?: stringResource(id = R.string.custom)
 
-    PreferenceLayout(label = stringResource(id = R.string.general_label)) {
+    PreferenceLayout(
+        backArrowVisible = !LocalIsExpandedScreen.current,
+        label = stringResource(id = R.string.general_label),
+    ) {
         PreferenceGroup {
             SwitchPreference(
                 adapter = prefs.allowRotation.getAdapter(),
                 label = stringResource(id = R.string.home_screen_rotation_label),
-                description = stringResource(id = R.string.home_screen_rotaton_description),
+                description = stringResource(id = R.string.home_screen_rotation_description),
             )
-            val enableFontSelection = prefs2.enableFontSelection.asState().value
-            if (enableFontSelection) {
+        }
+        ExpandAndShrink(visible = prefs2.enableFontSelection.asState().value) {
+            PreferenceGroup(heading = stringResource(id = R.string.font_label)) {
                 FontPreference(
                     fontPref = prefs.fontWorkspace,
-                    label = stringResource(id = R.string.font_label),
+                    label = stringResource(R.string.fontWorkspace),
+                )
+                FontPreference(
+                    fontPref = prefs.fontHeading,
+                    label = stringResource(R.string.fontHeading),
+                )
+                FontPreference(
+                    fontPref = prefs.fontHeadingMedium,
+                    label = stringResource(R.string.fontHeadingMedium),
+                )
+                FontPreference(
+                    fontPref = prefs.fontBody,
+                    label = stringResource(R.string.fontBody),
+                )
+                FontPreference(
+                    fontPref = prefs.fontBodyMedium,
+                    label = stringResource(R.string.fontBodyMedium),
                 )
             }
         }
-
         val wrapAdaptiveIcons = prefs.wrapAdaptiveIcons.getAdapter()
-        val transparentIconBackground = prefs.transparentIconBackground.getAdapter()
+
         PreferenceGroup(
             heading = stringResource(id = R.string.icons),
             description = stringResource(id = (R.string.adaptive_icon_background_description)),
             showDescription = wrapAdaptiveIcons.state.value,
         ) {
             NavigationActionPreference(
-                label = stringResource(id = R.string.icon_style),
-                destination = subRoute(name = GeneralRoutes.ICON_PACK),
+                label = stringResource(id = R.string.icon_style_label),
+                destination = GeneralRoutes.ICON_PACK,
                 subtitle = iconStyleSubtitle,
             )
             ExpandAndShrink(visible = themedIconsEnabled) {
                 SwitchPreference(
                     adapter = prefs.transparentIconBackground.getAdapter(),
-                    label = stringResource(id = R.string.transparent_background_icons),
+                    label = stringResource(id = R.string.transparent_background_icons_label),
                     description = stringResource(id = R.string.transparent_background_icons_description),
                 )
             }
             NavigationActionPreference(
                 label = stringResource(id = R.string.icon_shape_label),
-                destination = subRoute(name = GeneralRoutes.ICON_SHAPE),
+                destination = GeneralRoutes.ICON_SHAPE,
                 subtitle = iconShapeSubtitle,
                 endWidget = {
                     IconShapePreview(iconShape = iconShapeAdapter.state.value)
@@ -157,10 +171,17 @@ fun GeneralPreferences() {
         PreferenceGroup(heading = stringResource(id = R.string.colors)) {
             ThemePreference()
             ColorPreference(preference = prefs2.accentColor)
+            if (Utilities.ATLEAST_S && prefs2.accentColor.getAdapter().state.value == ColorOption.SystemAccent) {
+                if (!Utilities.ATLEAST_S) {
+                    ColorStylePreference(prefs2.colorStyle.getAdapter())
+                }
+            } else {
+                ColorStylePreference(prefs2.colorStyle.getAdapter())
+            }
         }
 
         PreferenceGroup(heading = stringResource(id = R.string.notification_dots)) {
-            val enabled by remember { notificationDotsEnabled(context) }.collectAsState(initial = false)
+            val enabled by remember { notificationDotsEnabled(context) }.collectAsStateWithLifecycle(initialValue = false)
             val serviceEnabled = notificationServiceEnabled()
             NotificationDotsPreference(enabled = enabled, serviceEnabled = serviceEnabled)
             if (enabled && serviceEnabled) {
@@ -185,9 +206,32 @@ fun GeneralPreferences() {
 }
 
 @Composable
+private fun ColorStylePreference(
+    adapter: PreferenceAdapter<ColorStyle>,
+    modifier: Modifier = Modifier,
+) {
+    val entries = remember {
+        ColorStyle.values().map { mode ->
+            ListPreferenceEntry(
+                value = mode,
+                label = { stringResource(id = mode.nameResourceId) },
+            )
+        }.toPersistentList()
+    }
+
+    ListPreference(
+        adapter = adapter,
+        entries = entries,
+        label = stringResource(id = R.string.color_style_label),
+        modifier = modifier,
+    )
+}
+
+@Composable
 private fun NotificationDotColorContrastWarnings(
     dotColor: ColorOption,
     dotTextColor: ColorOption,
+    modifier: Modifier = Modifier,
 ) {
     val dotColorIsDynamic = when (dotColor) {
         is ColorOption.SystemAccent,
@@ -198,12 +242,16 @@ private fun NotificationDotColorContrastWarnings(
     }
 
     if (dotColorIsDynamic && dotTextColor !is ColorOption.Default) {
-        WarningPreference(text = stringResource(id = R.string.notification_dots_color_contrast_warning_sometimes))
+        WarningPreference(
+            text = stringResource(id = R.string.notification_dots_color_contrast_warning_sometimes),
+            modifier = modifier,
+        )
     } else {
         ColorContrastWarning(
             foregroundColor = dotTextColor,
             backgroundColor = dotColor,
             text = stringResource(id = R.string.notification_dots_color_contrast_warning_always),
+            modifier = modifier,
         )
     }
 }
